@@ -84,6 +84,7 @@ namespace SoftTech.Wui
         .ToArray();      
     }
 
+    [Obsolete("Use constructor with Func<.., JsonData[], ..>")]
     public HWebSynchronizeHandler(Dictionary<string, Func<object, JsonData, HContext, HtmlResult<HElement>>> handlers)
     {
       this.Handlers = handlers.Select(pair => new{pair.Key, Value = new Func<object,JsonData[],HContext,HtmlResult<HElement>>((state, jsons, hcontext) => 
