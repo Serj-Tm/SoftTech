@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>SoftTech.Wui</id>
+    <version>1.0.0</version>
+    <title>SoftTech.Wui</title>
+    <authors>Serj-Tm</authors>
+    <owners>Serj-Tm</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>SoftTech.Wui</description>
+    <copyright>Copyright ©  2015</copyright>
+  </metadata>
+</package>

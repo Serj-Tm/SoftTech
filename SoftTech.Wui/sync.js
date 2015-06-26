@@ -1,4 +1,3 @@
-/// <reference path="ts/jquery.d.ts" />
 var ContainerSynchronizer = (function () {
     function ContainerSynchronizer(container, name, sync_refresh_period) {
         var _this = this;
@@ -7,7 +6,6 @@ var ContainerSynchronizer = (function () {
         if (sync_refresh_period === void 0) { sync_refresh_period = 10 * 1000; }
         this.cycle = 0;
         this.container = container != null ? $(container) : $('body');
-        //this.server_event = server_event == null ? this.server_web_event : server_event;
         this.container_name = name;
         this.sync_refresh_period = sync_refresh_period;
         window.setInterval(function () { return _this.update_all(); }, this.sync_refresh_period);
@@ -53,7 +51,6 @@ var ContainerSynchronizer = (function () {
             if (!current)
                 return null;
             var pentry = path[i];
-            //    $('#log').append('find_element: ' +  i + ' ' + pentry.index);
             if (pentry.kind == 'element') {
                 current = current.children().eq(pentry.index);
             }
@@ -117,10 +114,8 @@ var ContainerSynchronizer = (function () {
             return;
         var len = !desc.e ? 0 : desc.e.length;
         for (var i = 0; i < len; ++i) {
-            //window.external.Debug(element[0].tagName != null ? element[0].tagName:element);
             element.append(this.create_element(desc.e[i]));
         }
-        //window.external.Debug('attrs');
         var len = !desc.a ? 0 : desc.a.length;
         for (var i = 0; i < len; ++i) {
             if (this.is_event_name(desc.a[i].name)) {
@@ -136,7 +131,6 @@ var ContainerSynchronizer = (function () {
                 element.attr(desc.a[i].name, desc.a[i].value);
             }
         }
-        //window.external.Debug('text');
         if (desc.t != null) {
             element.text(desc.t.value);
         }
@@ -146,15 +140,12 @@ var ContainerSynchronizer = (function () {
     };
     ContainerSynchronizer.prototype.create_element = function (desc) {
         var element = $(desc.ns ? document.createElementNS(desc.ns, desc.name) : document.createElement(desc.name));
-        //window.external.Debug('create_element: ' + desc.a.length);
         var jsInit = null;
         for (var i = 0; i < (!desc.a ? 0 : desc.a.length); ++i) {
-            //window.external.Debug('n: ' + desc.a[i].name);
             if (desc.a[i].name == 'js-init')
                 jsInit = desc.a[i].value;
         }
         if (jsInit != null) {
-            //window.external.Debug('js-init: ' + jsInit);
             !(function () {
                 return eval(jsInit);
             }.apply(element));
@@ -242,16 +233,6 @@ function JsPath() {
         pathname = pathname.substring(0, pathname.length - 1);
     return window.location.origin + pathname + '.js';
 }
-//function init_sync_container(container)
-//{
-//  window.setInterval(function () { update_container(container); }, (typeof sync_refresh_period === 'undefined') ? 60 * 1000 : sync_refresh_period);
-//  update_container(container);
-//}
-//function sync_container_from_json(container: JQuery, json:string)
-//{
-//  sync_container(container, $.parseJSON(json));
-//  return true;
-//}
 var Command = (function () {
     function Command() {
     }
@@ -277,4 +258,3 @@ var PathEntry = (function () {
     }
     return PathEntry;
 })();
-//# sourceMappingURL=sync.js.map
