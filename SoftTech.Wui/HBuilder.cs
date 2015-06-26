@@ -19,10 +19,16 @@ namespace SoftTech.Wui
       return new HElement(name, content);
     }
 
+    public static HRaw Raw(this HBuilder h, string html)
+    {
+      return new HRaw(html);
+    }
+
     public static HElement[] Desktop_Scripts(this HBuilder h, bool isDebug = false)
     {
       return HDesktopSynchronizer.Scripts(isDebug:isDebug);
     }
+
 
     public static HElement Html(this HBuilder h, params object[] content)
     {

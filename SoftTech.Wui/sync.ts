@@ -14,15 +14,25 @@ class ContainerSynchronizer
     //this.server_event = server_event == null ? this.server_web_event : server_event;
     this.container_name = name;
     this.sync_refresh_period = sync_refresh_period;
+    this.id = Math.random().toString();
 
     window.setInterval(() => this.update_all(), this.sync_refresh_period);
+    window.setInterval(() =>
+      {
+        if(this.is_need_update)
+        {
+          this.is_need_update = false;
+          this.update_all();
+        }
+      }
+      , 50);
     this.update_all();
-
   }
   container: JQuery;
   container_name: string;
   //server_event: ServerEvent;
   sync_refresh_period: number;
+  id: string;
 
 
 
@@ -248,7 +258,7 @@ class ContainerSynchronizer
     }
   }
 
-  sync(commands: Command[]):void
+  apply_commands(commands: Command[]):void
   {
     var len = commands.length;
     for (var i: number = 0; i < len; ++i)
@@ -257,38 +267,54 @@ class ContainerSynchronizer
       this.change_element(this.find_element(this.container, command.path), command.cmd, command.value);
     }
   }
+  sync(data): void
+  {
+    if (data.prev_cycle == this.cycle && !this.is_updating)
+    {
+      this.is_updating = true;
+      try
+      {
+        this.apply_commands(data.updates);
+        this.cycle = data.cycle;
+        this.commands = this.commands.slice(data.processed_commands != null ? data.processed_commands : 0);
+        if (this.commands.length > 0)
+          this.is_need_update = true;
+      }
+      finally
+      {
+        this.is_updating = false;
+      }
+    }
+    else
+    {
+      this.is_need_update = true;
+    }
+  }
 
   cycle: number = 0;
+  is_need_update: boolean = false;
+  is_updating: boolean = false;
 
-  server_event(json):void
+  commands: string[] = []; 
+
+  server_event(json:string):void
   {
-    $.post(this.js_path() + '?cycle=' + this.cycle, { 'cycle': this.cycle, 'values': json },
-      data => 
-      {
-        if (data.prev_cycle == this.cycle)
-        {
-          this.sync(data.commands);
-          this.cycle = data.cycle;
-        }
-        else
-          this.update_all();
-      }, 'json');
+    this.commands.push(json);
+    $.post(this.js_path() + '?cycle=' + this.cycle, { 'frame-id': this.id, 'cycle': this.cycle, 'commands': this.commands }, data => this.sync(data), 'json');
   }
 
   update_all():void
   {
     try
-    {      
-      $.getJSON(this.js_path() + '?cycle=' + this.cycle + '&r=' + (1000 * Math.random() + '').substring(0, 3), data =>
+    {
+      if (this.commands.length > 0)
       {
-        if (data.prev_cycle == this.cycle)
-        {
-          this.sync(data.commands);
-          this.cycle = data.cycle;
-        }
-        else
-          this.update_all();
-      });
+        $.post(this.js_path() + '?cycle=' + this.cycle, { 'frame-id': this.id, 'cycle': this.cycle, 'commands': this.commands }, data => this.sync(data), 'json');
+      }
+      else
+      {      
+        $.getJSON(this.js_path() + '?cycle=' + this.cycle + '&r=' + (1000 * Math.random() + '').substring(0, 3), data => this.sync(data));
+      }
     }
     catch (e) { }
   }

@@ -11,11 +11,11 @@ namespace SoftTech.WebConsole
 {
   public class Part1
   {
-    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData json, HContext context)
+    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData[] jsons, HContext context)
     {
       var state = _state.As<MainState>() ?? new MainState();
 
-      if (json != null)
+      foreach (var json in jsons.Else_Empty())
       {
         //var account = MemoryDatabase.World.Accounts.FirstOrDefault(_account => _account.Name == "darkgray");
 

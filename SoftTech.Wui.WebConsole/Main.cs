@@ -11,18 +11,20 @@ namespace SoftTech.WebConsole
 {
   public class Main
   {
-    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData json, HContext context)
+    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData[] jsons, HContext context)
     {
       var state = _state.As<MainState>() ?? new MainState();
 
-      if (json != null)
+      foreach (var json in jsons.Else_Empty())
       {
-        //var account = MemoryDatabase.World.Accounts.FirstOrDefault(_account => _account.Name == "darkgray");
 
         switch (json.JPath("data", "command").ToString_Fair())
         {
-          default:
-            //state = new MyLibState(new[] { new Message(json.ToString_Fair()) }.Concat(state.Messages).Take(10).ToArray());
+          case "text":
+            state = state.With(text: json.JPath("value").ToString_Fair());
+            System.Threading.Thread.Sleep(new Random().Next(0, 500));
+            break;
+          default:            
             break;
         }
       }
@@ -47,7 +49,12 @@ namespace SoftTech.WebConsole
         ),
         h.Body
         (
-          new HRaw("1<b>sdf</b>2")
+          h.Div
+          (            
+            h.Raw(string.Format("1<b>{0}</b>2", DateTime.Now))
+          ),
+          h.Input(h.type("text"), h.Attribute("onkeyup", ";"), new hdata{{"command", "text"}}),
+          h.Div(state.Text)
           //h.Div(DateTime.UtcNow),
           //h.Input(h.type("button"), h.onclick(";"), h.value("update")),
           //h.Div(1, h.Attribute("js-init", "$(this).css('color', 'red')"))
@@ -63,8 +70,14 @@ namespace SoftTech.WebConsole
   }
   class MainState
   {
-    public MainState()
+    public MainState(string text = null)
     {
+      this.Text = text;
+    }
+    public readonly string Text;
+    public MainState With(Option<string> text = null)
+    {
+      return new MainState(text: text.Else(Text));
     }
   }
 

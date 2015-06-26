@@ -5,10 +5,20 @@ var ContainerSynchronizer = (function () {
         if (name === void 0) { name = null; }
         if (sync_refresh_period === void 0) { sync_refresh_period = 10 * 1000; }
         this.cycle = 0;
+        this.is_need_update = false;
+        this.is_updating = false;
+        this.commands = [];
         this.container = container != null ? $(container) : $('body');
         this.container_name = name;
         this.sync_refresh_period = sync_refresh_period;
+        this.id = Math.random().toString();
         window.setInterval(function () { return _this.update_all(); }, this.sync_refresh_period);
+        window.setInterval(function () {
+            if (_this.is_need_update) {
+                _this.is_need_update = false;
+                _this.update_all();
+            }
+        }, 50);
         this.update_all();
     }
     ContainerSynchronizer.prototype.server_element_event = function (_element, event, data) {
@@ -184,35 +194,45 @@ var ContainerSynchronizer = (function () {
                 break;
         }
     };
-    ContainerSynchronizer.prototype.sync = function (commands) {
+    ContainerSynchronizer.prototype.apply_commands = function (commands) {
         var len = commands.length;
         for (var i = 0; i < len; ++i) {
             var command = commands[i];
             this.change_element(this.find_element(this.container, command.path), command.cmd, command.value);
         }
     };
+    ContainerSynchronizer.prototype.sync = function (data) {
+        if (data.prev_cycle == this.cycle && !this.is_updating) {
+            this.is_updating = true;
+            try {
+                this.apply_commands(data.updates);
+                this.cycle = data.cycle;
+                this.commands = this.commands.slice(data.processed_commands != null ? data.processed_commands : 0);
+                if (this.commands.length > 0)
+                    this.is_need_update = true;
+            }
+            finally {
+                this.is_updating = false;
+            }
+        }
+        else {
+            this.is_need_update = true;
+        }
+    };
     ContainerSynchronizer.prototype.server_event = function (json) {
         var _this = this;
-        $.post(this.js_path() + '?cycle=' + this.cycle, { 'cycle': this.cycle, 'values': json }, function (data) {
-            if (data.prev_cycle == _this.cycle) {
-                _this.sync(data.commands);
-                _this.cycle = data.cycle;
-            }
-            else
-                _this.update_all();
-        }, 'json');
+        this.commands.push(json);
+        $.post(this.js_path() + '?cycle=' + this.cycle, { 'frame-id': this.id, 'cycle': this.cycle, 'commands': this.commands }, function (data) { return _this.sync(data); }, 'json');
     };
     ContainerSynchronizer.prototype.update_all = function () {
         var _this = this;
         try {
-            $.getJSON(this.js_path() + '?cycle=' + this.cycle + '&r=' + (1000 * Math.random() + '').substring(0, 3), function (data) {
-                if (data.prev_cycle == _this.cycle) {
-                    _this.sync(data.commands);
-                    _this.cycle = data.cycle;
-                }
-                else
-                    _this.update_all();
-            });
+            if (this.commands.length > 0) {
+                $.post(this.js_path() + '?cycle=' + this.cycle, { 'frame-id': this.id, 'cycle': this.cycle, 'commands': this.commands }, function (data) { return _this.sync(data); }, 'json');
+            }
+            else {
+                $.getJSON(this.js_path() + '?cycle=' + this.cycle + '&r=' + (1000 * Math.random() + '').substring(0, 3), function (data) { return _this.sync(data); });
+            }
         }
         catch (e) {
         }

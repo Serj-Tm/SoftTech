@@ -86,9 +86,26 @@ namespace SoftTech.Wui
 
     public HWebSynchronizeHandler(Dictionary<string, Func<object, JsonData, HContext, HtmlResult<HElement>>> handlers)
     {
+      this.Handlers = handlers.Select(pair => new{pair.Key, Value = new Func<object,JsonData[],HContext,HtmlResult<HElement>>((state, jsons, hcontext) => 
+        {
+          if (jsons == null || jsons.Length == 0) 
+            return pair.Value(state, null, hcontext);
+          var result = pair.Value(state, jsons[0], hcontext);
+          for (var i = 1; i < jsons.Length; ++i)
+          {
+            result = pair.Value(result.State, jsons[i], hcontext);
+          }
+          return result;
+        }
+      )
+      }
+      ).ToDictionary(pair => pair.Key, pair => pair.Value);
+    }
+    public HWebSynchronizeHandler(Dictionary<string, Func<object, JsonData[], HContext, HtmlResult<HElement>>> handlers)
+    {
       this.Handlers = handlers;
     }
-    public readonly Dictionary<string, Func<object, JsonData, HContext, HtmlResult<HElement>>> Handlers;
+    public readonly Dictionary<string, Func<object, JsonData[], HContext, HtmlResult<HElement>>> Handlers;
     public readonly Newtonsoft.Json.JsonSerializer JsonSerializer = Newtonsoft.Json.JsonSerializer.Create();
 
     public void ProcessRequest(HttpContext context)
@@ -115,14 +132,21 @@ namespace SoftTech.Wui
         var updates = Updates(context);
         var prevUpdate = updates.FirstOrDefault(_update => _update.Handler == handlerName && _update.Cycle == prevCycle);
         var prevPage = prevUpdate != null ? prevUpdate.Page : null;
-        var lastState = updates.LastOrDefault(_update => _update.Handler == handlerName)._f(_=>_.State);
+        //var prevState = updates.LastOrDefault(_update => _update.Handler == handlerName)._f(_=>_.State);
+        var prevState = prevUpdate._f(_ => _.State);
 
-        var jsonText = context.Request.Form["values"];
-        var source_json = jsonText != null ? new JsonData(JsonSerializer.Deserialize(new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(jsonText)))) : null;
-
+        var jsonTexts = context.Request.Form.GetValues("commands[]");
+        JsonData[] json_commands = null;
+        if (jsonTexts != null && jsonTexts.Length > 0)
+        {
+          json_commands = jsonTexts.Select(text => new JsonData(JsonSerializer.Deserialize(new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(text))))).ToArray();
+          //if (json_commands != null && json_commands.Length > 1) //HACK
+          //  json_commands = json_commands.Take(1).ToArray();
+        }
+        
         var watcher = new System.Diagnostics.Stopwatch();
         watcher.Start();
-        var result = handler(lastState, source_json, new HContext(handlerPair.Key, context));
+        HtmlResult<HElement> result = handler(prevState, json_commands, new HContext(handlerPair.Key, context));
 
         var update = PushUpdate(context, handlerName, result.Html, result.State);
 
@@ -130,8 +154,8 @@ namespace SoftTech.Wui
 
         var isPartial = page.Name.LocalName != "html";
 
-        var commands = HtmlJavaScriptSynchronizer.JsSync(new HElementProvider(), prevPage == null ? null : isPartial ? prevPage : prevPage.Element("body"), isPartial ? page : page.Element("body")).ToArray();
-        var jupdate = new Dictionary<string, object>() { { "cycle", update.Cycle }, { "prev_cycle", prevCycle }, { "commands", commands } };
+        var js_updates = HtmlJavaScriptSynchronizer.JsSync(new HElementProvider(), prevPage == null ? null : isPartial ? prevPage : prevPage.Element("body"), isPartial ? page : page.Element("body")).ToArray();
+        var jupdate = new Dictionary<string, object>() { { "cycle", update.Cycle }, { "prev_cycle", prevCycle }, {"processed_commands", json_commands.Else_Empty().Length}, { "updates", js_updates } };
 
         if (context.Request.Url.AbsolutePath.EndsWith(".text.js"))
           context.Response.ContentType = "text/plain";
