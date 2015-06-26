@@ -92,7 +92,7 @@
     <TypeScriptCompile Include="ts\server_event.d.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="sync.js" />
+    <None Include="sync.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ScriptResource.resx">
