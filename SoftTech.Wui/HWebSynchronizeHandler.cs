@@ -11,6 +11,11 @@ namespace SoftTech.Wui
 
   public class HWebSynchronizeHandler : IHttpHandler, System.Web.SessionState.IRequiresSessionState
   {
+    public static HElement[] Scripts_Inline(string handlerName, int cycle, bool isDebug = false, TimeSpan? refreshPeriod = null)
+    {
+      return SoftTech.Wui.HtmlJavaScriptSynchronizer.Scripts(new HElementProvider(), isDebug: isDebug, refreshPeriod: refreshPeriod, isInlineSyncScript: false);
+    }
+    [Obsolete]
     public static HElement[] Scripts(string handlerName, int cycle, bool isDebug = false, TimeSpan? refreshPeriod = null, bool isInlineSyncScript = true)
     {
       return 
@@ -42,7 +47,7 @@ namespace SoftTech.Wui
           }
           : Array<HElement>.Empty
         )
-        .Concat(SoftTech.Wui.HtmlJavaScriptSynchronizer.Scripts(new HElementProvider(), isDebug: isDebug, isInlineSyncScript: isInlineSyncScript))
+        .Concat(SoftTech.Wui.HtmlJavaScriptSynchronizer.Scripts(new HElementProvider(), isDebug: isDebug, refreshPeriod:refreshPeriod, isInlineSyncScript: isInlineSyncScript))
         .Concat(
           isInlineSyncScript
           ? new[]
@@ -186,7 +191,7 @@ namespace SoftTech.Wui
             head.Attributes, 
             //SoftTech.Wui.HWebSynchronizeHandler.Scripts(handlerName, update.Cycle, refreshPeriod: TimeSpan.FromSeconds(10)), 
             head.Nodes,
-            SoftTech.Wui.HWebSynchronizeHandler.Scripts(handlerName, update.Cycle, refreshPeriod: TimeSpan.FromSeconds(10), isInlineSyncScript:false)
+            SoftTech.Wui.HWebSynchronizeHandler.Scripts_Inline(handlerName, update.Cycle, refreshPeriod: TimeSpan.FromSeconds(10))
             //new HElement("script", new HAttribute("src", "/sync.js"), "")
 
           );

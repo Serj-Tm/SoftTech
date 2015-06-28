@@ -51,10 +51,11 @@ namespace SoftTech.WebConsole
         (
           h.Div
           (            
-            h.Raw(string.Format("1<b>{0}</b>2", DateTime.Now))
+            h.Raw(string.Format("1<b>{0:dd.MM.yy.HH:mm:ss.fff}</b> 2", DateTime.Now))
           ),
           h.Input(h.type("text"), h.Attribute("onkeyup", ";"), new hdata{{"command", "text"}}),
-          h.Div(state.Text)
+          h.Div(state.Text),
+          h.A(h.href("multi.html"), "multi sync frames")
           //h.Div(DateTime.UtcNow),
           //h.Input(h.type("button"), h.onclick(";"), h.value("update")),
           //h.Div(1, h.Attribute("js-init", "$(this).css('color', 'red')"))

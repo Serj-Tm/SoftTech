@@ -9,7 +9,7 @@ namespace SoftTech.Wui
 {
   public class HtmlJavaScriptSynchronizer
   {
-    public static TElement[] Scripts<TElement, TAttribute, TObject>(IElementProvider<TElement, TAttribute, TObject> elementProvider, bool isDebug = false, bool isInlineSyncScript = true)      
+    public static TElement[] Scripts<TElement, TAttribute, TObject>(IElementProvider<TElement, TAttribute, TObject> elementProvider, bool isDebug = false, TimeSpan? refreshPeriod = null, bool isInlineSyncScript = true)      
     {
       return new[]
         {
@@ -34,7 +34,7 @@ namespace SoftTech.Wui
           )
           : default(TElement),
           isInlineSyncScript ? default(TElement) : elementProvider.Element("script", elementProvider.Attribute("src", "/sync.js"), ""),
-          isInlineSyncScript ? default(TElement) : elementProvider.Element("script", "$(function(){new ContainerSynchronizer();});"),
+          isInlineSyncScript ? default(TElement) : elementProvider.Element("script", "$(function(){new ContainerSynchronizer(__ARGS__);});".Replace("__ARGS__", refreshPeriod != null ? "null, null, " + refreshPeriod.Value.TotalMilliseconds.ToString("f0") : "" ))
         };
     }
     public static string SyncScript = @"
