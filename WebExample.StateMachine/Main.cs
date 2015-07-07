@@ -12,11 +12,11 @@ namespace WebExample.StateMachine
 {
   public class Main
   {
-    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData json, HContext context)
+    public static SoftTech.Wui.HtmlResult<HElement> HView(object _state, JsonData[] jsons, HContext context)
     {
       var state = _state.As<MainState>() ?? new MainState();
 
-      if (json != null)
+      foreach (var json in jsons.Else_Empty())
       {
         switch (json.JPath("data", "command").ToString_Fair())
         {
@@ -206,7 +206,8 @@ namespace WebExample.StateMachine
              state.Orders.Where(order => order.IsReady).Select(order => 
                h.Div
                (
-                 h.Span(h.Span(order.Title)), 
+                 h.Span(order.Title), 
+                 h.Span(" "),
                  h.Input(h.type("button"), new hdata{{"command", "order-build"}, {"order", order.Id}}, h.value("Собрать"), h.onclick(";"))
                )
                  
@@ -219,7 +220,8 @@ namespace WebExample.StateMachine
              state.Orders.Where(order => order.Status == OrderStatus.Ready && !order.IsDelivery).Select(order =>
                h.Div
                (
-                 h.Span(h.Span(order.Title)),
+                 h.Span(order.Title),
+                 h.Span(" "),
                  h.Input(h.type("button"), new hdata { { "command", "order-to-table" }, { "order", order.Id } }, h.value("Передать клиенту"), h.onclick(";"))
                )
 
@@ -232,8 +234,9 @@ namespace WebExample.StateMachine
              state.Orders.Where(order => order.Status == OrderStatus.Ready && order.IsDelivery).Select(order =>
                h.Div
                (
-                 h.Span(h.Span(order.Title)),
-                 new []{"Иванов П.", "Петров Д.", "Сидоров К."}
+                 h.Span(order.Title),
+                 h.Span(" "),
+                 new[] { "Иванов П.", "Петров Д.", "Сидоров К." }
                  .Select(courier =>
                    h.Input(h.type("button"), new hdata { { "command", "courier" }, { "order", order.Id }, {"courier", courier }}, h.value(courier), h.onclick(";"))
                  )
@@ -248,7 +251,8 @@ namespace WebExample.StateMachine
              state.Orders.Where(order => order.Status == OrderStatus.ToDelivery).Select(order =>
                h.Div
                (
-                 h.Span(h.Span(order.Title)),
+                 h.Span(order.Title),
+                 h.Span(" "),
                  h.Input(h.type("button"), new hdata { { "command", "order-deliveried" }, { "order", order.Id } }, h.value("Передать клиенту"), h.onclick(";"))
                )
 
@@ -261,7 +265,7 @@ namespace WebExample.StateMachine
              state.Orders.Where(order => order.Status == OrderStatus.ToTable || order.Status == OrderStatus.Deliveried).Select(order =>
                h.Div
                (
-                 h.Span(h.Span(order.Title))
+                 h.Span(order.Title)
                )
 
              )
