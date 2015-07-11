@@ -10,7 +10,10 @@ namespace SoftTech.WebConsole
     public HSync()
       : base(new Dictionary<string, Func<object, JsonData[], HContext, HtmlResult<HElement>>> 
         { 
-          { "default", Main.HView }, {"part1", Part1.HView}, {"part2", Part2.HView},
+          { "default", Main.HView }, 
+          {"part1", Part1.HView}, 
+          {"part2", Part2.HView},
+          {"auth-view", AuthView.HView},
         })
     {
     }

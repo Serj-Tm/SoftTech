@@ -64,6 +64,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Global.asax" />
     <Content Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -80,9 +81,14 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AuthHlp.cs" />
+    <Compile Include="AuthView.cs" />
     <Compile Include="default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="HSync.cs" />
     <Compile Include="Part2.cs" />
