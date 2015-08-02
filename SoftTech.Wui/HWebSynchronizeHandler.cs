@@ -116,7 +116,6 @@ namespace SoftTech.Wui
 
     public void ProcessRequest(HttpContext context)
     {
-      //context.Response.ContentType = "text/html";
       context.Response.Cache.SetCacheability(HttpCacheability.NoCache);
       context.Response.Cache.SetExpires(DateTime.Now.AddMinutes(0));
       context.Response.Cache.SetMaxAge(new TimeSpan(0));
@@ -133,12 +132,10 @@ namespace SoftTech.Wui
 
       if (context.Request.Url.AbsolutePath.EndsWith(".js"))
       {
-        //var prevCycle = int.Parse(HttpUtility.ParseQueryString(context.Request.Url.Query).Get("cycle"));
         var prevCycle = int.Parse(context.Request.QueryString["cycle"]);
         var updates = Updates(context);
         var prevUpdate = updates.FirstOrDefault(_update => _update.Handler == handlerName && _update.Cycle == prevCycle);
         var prevPage = prevUpdate != null ? prevUpdate.Page : null;
-        //var prevState = updates.LastOrDefault(_update => _update.Handler == handlerName)._f(_=>_.State);
         var prevState = prevUpdate._f(_ => _.State);
 
         var jsonTexts = context.Request.Form.GetValues("commands[]");
@@ -146,8 +143,6 @@ namespace SoftTech.Wui
         if (jsonTexts != null && jsonTexts.Length > 0)
         {
           json_commands = jsonTexts.Select(text => new JsonData(JsonSerializer.Deserialize(new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(text))))).ToArray();
-          //if (json_commands != null && json_commands.Length > 1) //HACK
-          //  json_commands = json_commands.Take(1).ToArray();
         }
         
         var watcher = new System.Diagnostics.Stopwatch();
@@ -168,9 +163,6 @@ namespace SoftTech.Wui
         else
           context.Response.ContentType = "text/json";
 
-        //var jsSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-        //var json = jsSerializer.Serialize(jupdate);
-        //context.Response.Write(json);
         JsonSerializer.Serialize(context.Response.Output, jupdate);
         watcher.Stop();
         update.Elapsed = watcher.Elapsed;
@@ -189,22 +181,14 @@ namespace SoftTech.Wui
 
           var startHead = new HElement(head.Name, 
             head.Attributes, 
-            //SoftTech.Wui.HWebSynchronizeHandler.Scripts(handlerName, update.Cycle, refreshPeriod: TimeSpan.FromSeconds(10)), 
             head.Nodes,
-            SoftTech.Wui.HWebSynchronizeHandler.Scripts_Inline(handlerName, update.Cycle, refreshPeriod: TimeSpan.FromSeconds(10))
-            //new HElement("script", new HAttribute("src", "/sync.js"), "")
-
+            SoftTech.Wui.HWebSynchronizeHandler.Scripts_Inline(handlerName, update.Cycle, refreshPeriod: result.RefreshPeriod ?? TimeSpan.FromSeconds(10))
           );
           page = new HElement("html", startHead, new HElement("body"));
         }
 
         context.Response.Write(page.ToString());
       }
-      //context.Response.Write("Hello World");
-      //Data++;
-      //context.Response.Write(context.Request.Url);
-      //context.Response.Write(context.Request.RawUrl);
-      //context.Response.Write(Data);
     }
 
     public bool IsReusable
@@ -214,8 +198,6 @@ namespace SoftTech.Wui
         return false;
       }
     }
-    //static UpdateCycle<HElement>[] Updates = new UpdateCycle<HElement>[] { };
-    //static readonly object locker = new object();
 
     static object Updates_Locker(HttpContext context)
     {
@@ -294,6 +276,10 @@ namespace SoftTech.Wui
   {
     public object State;
     public TElement Html;
+    /// <summary>
+    /// Имеет силу только при первой загрузке страницы
+    /// </summary>
+    public TimeSpan? RefreshPeriod; 
   }
 
 }
